@@ -10,4 +10,8 @@ scikit-learn>=1.0.2
 torch>=2.2.2
 transformers
 pdfminer.six==20231228
+flash-attn
+transformers
+torch
+torchvision
 # The requirements.txt must ensure that only necessary external dependencies are introduced. If there are new dependencies to add, please contact the project administrator.

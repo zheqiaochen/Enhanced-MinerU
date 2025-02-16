@@ -8,6 +8,7 @@ import torch
 import yaml
 from loguru import logger
 from PIL import Image
+from qwen import *
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
 
@@ -68,7 +69,7 @@ class CustomPEKModel:
         self.table_config = kwargs.get('table_config')
         self.apply_table = self.table_config.get('enable', False)
         self.table_max_time = self.table_config.get('max_time', TABLE_MAX_TIME_VALUE)
-        self.table_model_name = self.table_config.get('model', MODEL_NAME.RAPID_TABLE)
+        self.table_model_name = self.table_config.get('model', MODEL_NAME.QWEN)
         self.table_sub_model_name = self.table_config.get('sub_model', None)
 
         # ocr config
@@ -188,7 +189,7 @@ class CustomPEKModel:
 
         # layout检测
         layout_start = time.time()
-        layout_res = []
+        layout_res = [] 
         if self.layout_model_name == MODEL_NAME.LAYOUTLMv3:
             # layoutlmv3
             layout_res = self.layout_model(image, ignore_catids=[])
@@ -277,6 +278,9 @@ class CustomPEKModel:
                             html_code = table_result[0]
                 elif self.table_model_name == MODEL_NAME.TABLE_MASTER:
                     html_code = self.table_model.img2html(new_image)
+                elif self.table_model_name == MODEL_NAME.QWEN:
+                    base64_str = pil_image_to_base64(new_image)
+                    html_code = self.table_model.inference(base64_str, prompt)
                 elif self.table_model_name == MODEL_NAME.RAPID_TABLE:
                     html_code, table_cell_bboxes, logic_points, elapse = self.table_model.predict(
                         new_image

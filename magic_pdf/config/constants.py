@@ -54,6 +54,8 @@ class MODEL_NAME:
 
     YOLO_V11_LangDetect = 'yolo_v11n_langdetect'
 
+    QWEN = 'qwen'
+
 
 PARSE_TYPE_TXT = 'txt'
 PARSE_TYPE_OCR = 'ocr'
