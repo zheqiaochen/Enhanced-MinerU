@@ -6,4 +6,4 @@ weights:
   struct_eqtable: TabRec/StructEqTable
   tablemaster: TabRec/TableMaster
   rapid_table: TabRec/RapidTable
-  qwen: Qwen/Qwen2.5-VL-7B-Instruct
+  qwen: ""

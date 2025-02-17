@@ -9,6 +9,7 @@ import yaml
 from loguru import logger
 from PIL import Image
 from .qwen import *
+import time
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
 
@@ -168,7 +169,11 @@ class CustomPEKModel:
         )
         # init table model
         if self.apply_table:
-            table_model_dir = self.configs['weights'][self.table_model_name]
+    # 如果使用 QWEN 模型，由于是 API 调用，不需要权重文件
+            if self.table_model_name == MODEL_NAME.QWEN:
+                table_model_dir = ""  # 或者其他占位符
+            else:
+                table_model_dir = self.configs['weights'][self.table_model_name]
             self.table_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.Table,
                 table_model_name=self.table_model_name,
@@ -178,6 +183,7 @@ class CustomPEKModel:
                 ocr_engine=self.ocr_model,
                 table_sub_model_name=self.table_sub_model_name
             )
+
 
         logger.info('DocAnalysis init done!')
 
@@ -279,32 +285,24 @@ class CustomPEKModel:
                 elif self.table_model_name == MODEL_NAME.TABLE_MASTER:
                     html_code = self.table_model.img2html(new_image)
                 elif self.table_model_name == MODEL_NAME.QWEN:
-                    base64_str = pil_image_to_base64(new_image)
-                    html_code = self.table_model.inference(base64_str, prompt)
+                    # 直接调用更新后的 inference，传入 PIL Image 对象即可
+                    html_code = self.table_model.inference(new_image)
+                    logger.info("QWEN inference result: {}".format(html_code))
+                    time.sleep(1)
                 elif self.table_model_name == MODEL_NAME.RAPID_TABLE:
-                    html_code, table_cell_bboxes, logic_points, elapse = self.table_model.predict(
-                        new_image
-                    )
+                    html_code, table_cell_bboxes, logic_points, elapse = self.table_model.predict(new_image)
                 run_time = time.time() - single_table_start_time
                 if run_time > self.table_max_time:
-                    logger.warning(
-                        f'table recognition processing exceeds max time {self.table_max_time}s'
-                    )
+                    logger.warning(f'table recognition processing exceeds max time {self.table_max_time}s')
                 # 判断是否返回正常
                 if html_code:
-                    expected_ending = html_code.strip().endswith(
-                        '</html>'
-                    ) or html_code.strip().endswith('</table>')
+                    expected_ending = html_code.strip().endswith('</html>') or html_code.strip().endswith('</table>')
                     if expected_ending:
                         res['html'] = html_code
                     else:
-                        logger.warning(
-                            'table recognition processing fails, not found expected HTML table end'
-                        )
+                        logger.warning('table recognition processing fails, not found expected HTML table end')
                 else:
-                    logger.warning(
-                        'table recognition processing fails, not get html return'
-                    )
+                    logger.warning('table recognition processing fails, not get html return')
             logger.info(f'table time: {round(time.time() - table_start, 2)}')
 
         return layout_res

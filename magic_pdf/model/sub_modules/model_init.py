@@ -32,6 +32,9 @@ def table_model_init(table_model_type, model_path, max_time, _device_='cpu', ocr
         table_model = TableMasterPaddleModel(config)
     elif table_model_type == MODEL_NAME.RAPID_TABLE:
         table_model = RapidTableModel(ocr_engine, table_sub_model_name)
+    elif table_model_type == MODEL_NAME.QWEN:
+        from magic_pdf.model.qwen import inference
+        return type('QwenModel', (), {'inference': staticmethod(inference)})()
     else:
         logger.error('table model type not allow')
         exit(1)
