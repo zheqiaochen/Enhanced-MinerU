@@ -8,10 +8,8 @@ pydantic>=2.7.2
 PyMuPDF>=1.24.9,<=1.24.14
 scikit-learn>=1.0.2
 torch>=2.2.2
-transformers
 pdfminer.six==20231228
-flash-attn
-transformers
 torch
 torchvision
+git+https://github.com/huggingface/transformers.git#egg=transformers
 # The requirements.txt must ensure that only necessary external dependencies are introduced. If there are new dependencies to add, please contact the project administrator.

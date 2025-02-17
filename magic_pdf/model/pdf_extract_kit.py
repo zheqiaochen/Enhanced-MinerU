@@ -8,7 +8,7 @@ import torch
 import yaml
 from loguru import logger
 from PIL import Image
-from qwen import *
+from .qwen import *
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
 
