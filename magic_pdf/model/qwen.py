@@ -24,7 +24,7 @@ def pil_image_to_base64(img, format="PNG"):
 
 def extract_html_content(text):
     """
-    Extracts the content between <html> and </html> tags, including the tags themselves.
+    提取文本中 <html> 和 </html> 标签之间的内容（包括标签本身）
     """
     match = re.search(r"<html>.*?</html>", text, re.DOTALL)
     if match:
@@ -35,32 +35,41 @@ def extract_html_content(text):
 def inference(image):
     """
     接收一个 PIL Image 对象或图片文件路径，返回解析后的 HTML 字符串。
+    若发生错误，则返回 <html></html>
     """
-    # 如果传入的是文件路径，则打开图片
-    if isinstance(image, str):
-        image = Image.open(image)
-    base64_image = pil_image_to_base64(image)
-    completion = client.chat.completions.create(
-        model="qwen2.5-vl-7b-instruct",
-        messages=[
-            {
-                "role": "system",
-                "content": [{"type": "text", "text": "你是一个识别表格的助理"}]
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        # 传入 Base64 编码的图片，注意图片格式需与 Content Type 保持一致
-                        "image_url": {"url": f"data:image/png;base64,{base64_image}"}
-                    },
-                    {"type": "text", "text": "解析并输出为html格式，以<html>和</html>标签包裹"},
-                ],
-            }
-        ],
-    )
-    return extract_html_content(completion.choices[0].message.content)
+    try:
+        # 如果传入的是文件路径，则打开图片
+        if isinstance(image, str):
+            image = Image.open(image)
+        base64_image = pil_image_to_base64(image)
+        completion = client.chat.completions.create(
+            model="qwen2.5-vl-7b-instruct",
+            messages=[
+                {
+                    "role": "system",
+                    "content": [{"type": "text", "text": "你是一个识别表格的助理"}]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            # 传入 Base64 编码的图片，注意图片格式需与 Content Type 保持一致
+                            "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+                        },
+                        {"type": "text", "text": "解析并输出为html格式，以<html>和</html>标签包裹"},
+                    ],
+                }
+            ],
+        )
+        html_content = extract_html_content(completion.choices[0].message.content)
+        if html_content is None:
+            raise ValueError("未能在返回结果中提取到HTML内容")
+        return html_content
+    except Exception as e:
+        # 打印错误信息（也可以选择记录日志）
+        print(f"Error during inference: {e}")
+        return "<html></html>"
 
 if __name__ == "__main__":
     # 测试时可以传入图片路径或 PIL Image 对象
